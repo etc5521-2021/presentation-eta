@@ -19,6 +19,20 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 
 ```{r}
 library(tidyverse)
+library(lubridate)
 ```
 
+```{r data}
+vic_cases <- read_csv("data/NCOV_COVID_Cases_by_LGA_20211016.csv")
+vic_cases_source <- read_csv("data/NCOV_COVID_Cases_by_LGA_Source_20211015.csv")
 
+# Filter for dates
+
+vic_cases <- vic_cases %>%
+  filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
+
+vic_cases_source <- vic_cases_source %>%
+  filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
+```
+
+*Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
