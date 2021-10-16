@@ -3,7 +3,7 @@ title: "Presentation Ninja"
 subtitle: "⚔<br/>with xaringan"
 author: "Yihui Xie"
 institute: "RStudio, PBC"
-date: "2016/12/12 (updated: `r Sys.Date()`)"
+date: " `r Sys.Date()` "
 output:
   xaringan::moon_reader:
     lib_dir: libs
@@ -20,6 +20,8 @@ knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 ```{r}
 library(tidyverse)
 library(lubridate)
+library(sf)
+library(ggplot2)
 ```
 
 ```{r data}
@@ -36,3 +38,13 @@ vic_cases_source <- vic_cases_source %>%
 ```
 
 *Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
+
+```{r map}
+
+vic_map <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/AD_LGA_AREA_POLYGON.shp")
+
+# ggplot(vic_map) + 
+#   geom_sf(aes(fill = STATE))
+
+```
+
