@@ -1,0 +1,111 @@
+---
+title: "ets"
+author: "Sitha Jawahar"
+date: "17/10/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(readr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
+library(kableExtra)
+library(DT)
+
+```
+
+```{r}
+lga <- read_csv("data/lga.csv")
+
+```
+
+
+
+
+```{r}
+
+lga_2020 <- lga %>% 
+  mutate(month = month(diagnosis_date, label = TRUE)) %>% 
+  mutate(year = year(diagnosis_date)) %>% 
+  filter(year == "2020") %>% 
+  filter(month == c("May",
+                    "Jun",
+                     "Jul",
+                    "Aug",
+                    "Sep")) 
+```
+
+```{r}
+lga1 <-  lga_2020 %>% 
+  group_by(acquired, month) %>% 
+  tally()
+
+
+ggplot(lga1, aes(x = month, y= n , fill= acquired))+
+  geom_bar(stat = "identity", position = "dodge")
+
+
+```
+
+
+```{r}
+lga2 <- lga_2020 %>% 
+  group_by(Localgovernmentarea, month, acquired) %>% 
+  tally() %>% 
+  arrange(desc(n)) %>% 
+  top_n(10) %>% 
+  filter(n > 50)
+
+
+lga2 %>%  DT::datatable(rownames = FALSE, 
+                                 colnames = c("Localgovernmentarea", "Month", "acquired", "n"),
+                                 options = list(pageLength = 10))
+
+
+```
+
+Wyndham, Brimbank, HUme, Melton, Whittlesea, Melboune
+
+```{r}
+lga3 <- lga_2020 %>% 
+  group_by(Localgovernmentarea, month, acquired) %>% 
+  filter(acquired == "Travel overseas") %>% 
+  tally() %>% 
+  arrange(desc(n))
+
+ggplot(lga3, aes(x = Localgovernmentarea, y = n, fill = "pink" )) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90))
+
+lga3 %>%  DT::datatable(rownames = FALSE, 
+                                 colnames = c("Localgovernmentarea", "Month", "acquired", "n"),
+                                 options = list(pageLength = 10))
+                               
+```
+
+Interstate, Casey, Melton
+
+
+```{r}
+lga3 <- lga_2020 %>% 
+  group_by(Localgovernmentarea, month, acquired) %>% 
+  filter(acquired == "Acquired in Australia, unknown source") %>% 
+  tally() %>% 
+  arrange(desc(n))
+
+ggplot(lga3, aes(x = Localgovernmentarea, y = n, fill = "pink" )) +
+  geom_col() +
+  theme(axis.text.x = element_text(angle = 90))
+
+lga3 %>%  DT::datatable(rownames = FALSE, 
+                                 colnames = c("Localgovernmentarea", "Month", "acquired", "n"),
+                                 options = list(pageLength = 10))
+```
+
+Melbourne, Brimbank, Wyndham, Melton, Hume, Whittlesea. 
+
+So Melbourne is not very high on travel cases because it was completely closed to international students, tourists and any outsiders, making the only way for the infection spreading through locals. Which is why it is there in plots 1 and 3. 
+
