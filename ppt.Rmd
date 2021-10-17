@@ -22,6 +22,7 @@ library(tidyverse)
 library(lubridate)
 library(sf)
 library(ggplot2)
+library(cartogram)
 ```
 
 ```{r data}
@@ -35,16 +36,80 @@ vic_cases <- vic_cases %>%
 
 vic_cases_source <- vic_cases_source %>%
   filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
+
 ```
 
 *Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
 
 ```{r map}
-
 vic_map <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/AD_LGA_AREA_POLYGON.shp")
 
-# ggplot(vic_map) + 
-#   geom_sf(aes(fill = STATE))
+vic_post <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/POSTCODE_POLYGON.shp")
+
+
+vic_new <- vic_post %>% 
+  mutate(Postcode = as.numeric(POSTCODE))
+
+cases <- vic_cases_source %>% 
+  group_by(Postcode) %>% 
+  tally() %>% 
+  right_join(vic_new) %>% 
+  rename("cases" = "n")
+```
+
+```{r}
+ ggplot(cases) + 
+   geom_sf(aes(geometry = geometry, fill = cases))+
+   scale_fill_viridis_c(na.value = "white", direction = -1)+
+  theme_void()
+```
+
+
+```{r}
+ ggplot(cases) + 
+   geom_sf(aes(geometry = geometry, fill = cases))+
+   scale_fill_viridis_c(na.value = "white", direction = -1)+
+  xlim(144.4, 145.35)+ 
+  ylim(-38.2, -37.45)+
+   theme_void()
+ plotly::ggplotly()
+
+```
+
+```{r}
+vic_cases_source %>% 
+  group_by(Postcode, Localgovernmentarea) %>% 
+  tally() %>% 
+  arrange(desc(n))
+```
+
+```{r}
+vic_cases_source %>% 
+  #filter(Postcode == "3029") %>% 
+  group_by(Localgovernmentarea) %>% 
+  #group_by(acquired) %>% 
+  tally() %>% 
+  arrange(desc(n))
+```
+
+
+
+```{r}
+# This is for number changes over time 
+count <- vic_cases_source %>% 
+  select(-acquired, -Localgovernmentarea) %>% 
+  mutate(count = 1) %>% 
+  group_by(diagnosis_date, Postcode) %>% 
+  tally() %>% 
+  pivot_wider(names_from = "Postcode",
+              values_from = n) 
+
+count[is.na(count)] <- 0
+
+count <- count %>% 
+  pivot_longer(cols = c(2:421),
+               names_to = "postcode",
+               values_to = "count")
 
 ```
 
