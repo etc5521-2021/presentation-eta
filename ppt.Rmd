@@ -23,6 +23,7 @@ library(lubridate)
 library(sf)
 library(ggplot2)
 library(cartogram)
+library(leaflet)
 ```
 
 ```{r data}
@@ -54,7 +55,7 @@ cases <- vic_cases_source %>%
   group_by(Postcode) %>% 
   tally() %>% 
   right_join(vic_new) %>% 
-  rename("cases" = "n")
+  rename("count" = "n")
 ```
 
 ```{r}
@@ -77,14 +78,36 @@ cases <- vic_cases_source %>%
 ```
 
 ```{r}
+pal_fun <- colorQuantile("YlOrRd", NULL, n = 5)
+
+leaflet(cases) %>% 
+  addPolygons(
+    fillColor = ~pal_fun(count)
+  )
+```
+
+
+
+```{r}
 vic_cases_source %>% 
-  group_by(Postcode, Localgovernmentarea) %>% 
+  group_by(diagnosis_date, acquired) %>% 
   tally() %>% 
-  arrange(desc(n))
+  ggplot(aes(x = diagnosis_date,
+         y = n))+
+  geom_line()+
+  facet_wrap(~acquired)+
+  labs(x = 'Date',
+       y = "Number of cases",
+       title = "Number of cases confirmed")+
+  theme_bw()
 ```
 
 ```{r}
 vic_cases_source %>% 
+  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>% 
   #filter(Postcode == "3029") %>% 
   group_by(Localgovernmentarea) %>% 
   #group_by(acquired) %>% 
@@ -112,4 +135,6 @@ count <- count %>%
                values_to = "count")
 
 ```
+
+
 
