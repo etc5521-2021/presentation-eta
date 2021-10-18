@@ -35,16 +35,53 @@ vic_cases <- vic_cases %>%
 
 vic_cases_source <- vic_cases_source %>%
   filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
+
+
+
+vic_cases_aggregate <- vic_cases %>%
+  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>%
+  group_by(diagnosis_date,Localgovernmentarea) %>%
+  tally() %>%
+  mutate(NAME = tolower(Localgovernmentarea))
+
+vic_cases_source_aggregate <- vic_cases_source %>%
+  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>%
+  group_by(diagnosis_date,Localgovernmentarea,Postcode, acquired) %>%
+  tally()
+  
+
 ```
 
 *Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
 
-```{r map}
+```{r map, results='hide'}
 
 vic_map <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/AD_LGA_AREA_POLYGON.shp")
 
-# ggplot(vic_map) + 
-#   geom_sf(aes(fill = STATE))
+vic_map_clean <- vic_map %>%
+  select(NAME, STATE, geometry) %>%
+  mutate(NAME = tolower(NAME))
+
+vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/POSTCODE_POLYGON.shp")
+
+vic_map_postcode_clean <- vic_map_postcode %>%
+  select(POSTCODE, geometry)
+
+p <- merge(vic_cases_aggregate, vic_map_clean)
+
+
+```
+
+```{r mapDisplay, eval=FALSE}
+ggplot(p) +
+   geom_sf(aes(fill = n, geometry = geometry)) +
+  theme(legend.position = "none")
 
 ```
 
