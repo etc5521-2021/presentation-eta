@@ -29,6 +29,7 @@ library(leaflet)
 ```{r data}
 vic_cases <- read_csv("data/NCOV_COVID_Cases_by_LGA_20211016.csv")
 vic_cases_source <- read_csv("data/NCOV_COVID_Cases_by_LGA_Source_20211015.csv")
+ages <- read_csv("data/age.csv")
 
 # Filter for dates
 
@@ -38,6 +39,8 @@ vic_cases <- vic_cases %>%
 vic_cases_source <- vic_cases_source %>%
   filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
 
+ages <- ages %>% 
+  filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
 ```
 
 *Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
@@ -53,22 +56,29 @@ vic_new <- vic_post %>%
 
 cases <- vic_cases_source %>% 
   group_by(Postcode) %>% 
-  tally() %>% 
-  right_join(vic_new) %>% 
-  rename("count" = "n")
+  tally()
+
+vic_new <- vic_new %>% 
+  left_join(cases) 
+
+vic_join <- vic_new %>% 
+  left_join(cases) %>% 
+  st_join(vic_map)
 ```
 
-```{r}
- ggplot(cases) + 
-   geom_sf(aes(geometry = geometry, fill = cases))+
+```{r eval = FALSE}
+# original sf plot
+ ggplot(vic_new) + 
+   geom_sf(aes(geometry = geometry, fill = n))+
    scale_fill_viridis_c(na.value = "white", direction = -1)+
   theme_void()
 ```
 
 
-```{r}
- ggplot(cases) + 
-   geom_sf(aes(geometry = geometry, fill = cases))+
+```{r eval = FALSE}
+# original sf plot
+ ggplot(vic_new) + 
+   geom_sf(aes(geometry = geometry, fill = n))+
    scale_fill_viridis_c(na.value = "white", direction = -1)+
   xlim(144.4, 145.35)+ 
   ylim(-38.2, -37.45)+
@@ -78,12 +88,19 @@ cases <- vic_cases_source %>%
 ```
 
 ```{r}
-pal_fun <- colorQuantile("YlOrRd", NULL, n = 5)
+# This is the leaflet plot
 
-leaflet(cases) %>% 
+pal_fun <- colorQuantile("viridis", vic_join$n, n = 6, na.color = "white", reverse = TRUE)
+
+leaflet(vic_new) %>% 
+  addTiles() %>% 
   addPolygons(
-    fillColor = ~pal_fun(count)
-  )
+    color = 'grey',
+    weight = 1,
+    fillColor = ~pal_fun(n),
+    fillOpacity= 0.7,
+    smoothFactor = 0.5
+  ) 
 ```
 
 
@@ -100,19 +117,6 @@ vic_cases_source %>%
        y = "Number of cases",
        title = "Number of cases confirmed")+
   theme_bw()
-```
-
-```{r}
-vic_cases_source %>% 
-  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
-                                               split=' ',
-                                               fixed=TRUE),
-                                      function(x) (x[1]))) %>% 
-  #filter(Postcode == "3029") %>% 
-  group_by(Localgovernmentarea) %>% 
-  #group_by(acquired) %>% 
-  tally() %>% 
-  arrange(desc(n))
 ```
 
 
@@ -136,5 +140,136 @@ count <- count %>%
 
 ```
 
+```{r}
+# number of cases by age
+
+ages %>% 
+  mutate(month = month(diagnosis_date)) %>% 
+  group_by(agegroup, month) %>% 
+  tally() %>% 
+  ggplot(aes(x = month,
+             y = n))+
+  geom_col()+
+  facet_wrap(~agegroup, ncol =5)+
+  theme_bw()
+```
+```{r}
+# top 5 cases gov't area
+
+vic_cases_source %>% 
+  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>% 
+  group_by(Localgovernmentarea) %>% 
+  tally() %>% 
+  arrange(desc(n)) 
+```
+
+```{r}
+# Local area accumulated cases(top5 areas)
+
+gov_count <- vic_cases_source %>% 
+  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>% 
+  
+  select(diagnosis_date, Localgovernmentarea) %>% 
+  mutate(count = 1) %>% 
+  group_by(diagnosis_date, Localgovernmentarea) %>% 
+  tally() %>% 
+  pivot_wider(names_from = "Localgovernmentarea",
+              values_from = n) 
+
+gov_count[is.na(gov_count)] <- 0
+
+gov_count <- gov_count %>% 
+  pivot_longer(cols = c(2:71),
+               names_to = "Localgovernmentarea",
+               values_to = "count")
+
+gov_count %>% 
+  filter(Localgovernmentarea %in% c("Wyndham","Brimbank","Hume", "Whittlesea", "Melton")) %>% 
+  ggplot(aes(y = count,
+             x = diagnosis_date,
+             color = Localgovernmentarea))+
+  geom_line()
+
+wyn <- gov_count %>% 
+  filter(Localgovernmentarea == "Wyndham") 
+wyn <- wyn %>% 
+  cbind(acc_count = cumsum(wyn$count))
+
+brim <- gov_count %>% 
+  filter(Localgovernmentarea == "Brimbank") 
+brim <- brim %>% 
+  cbind(acc_count = cumsum(brim$count))
+
+hume <- gov_count %>% 
+  filter(Localgovernmentarea == "Hume") 
+hume <- hume %>% 
+  cbind(acc_count = cumsum(hume$count))
+
+whi <- gov_count %>% 
+  filter(Localgovernmentarea == "Whittlesea") 
+whi <- whi %>% 
+  cbind(acc_count = cumsum(whi$count))
+
+mel <- gov_count %>% 
+  filter(Localgovernmentarea == "Melton") 
+mel <- mel%>% 
+  cbind(acc_count = cumsum(mel$count))
+
+top_cases <- wyn %>% 
+  rbind(brim) %>% 
+  rbind(hume) %>% 
+  rbind(whi) %>% 
+  rbind(mel)
+
+top_cases %>% 
+  ggplot(aes(x = diagnosis_date,
+             y = acc_count,
+             color = Localgovernmentarea))+
+  geom_line()+
+  theme_bw()
+
+
+
+```
+
+```{r}
+gov_count_con <- vic_cases_source %>% 
+  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>% 
+  filter(acquired == "Contact with a confirmed case") %>% 
+  select(diagnosis_date, Localgovernmentarea) %>% 
+  mutate(count = 1) %>% 
+  group_by(diagnosis_date, Localgovernmentarea) %>% 
+  tally() %>% 
+  pivot_wider(names_from = "Localgovernmentarea",
+              values_from = n) 
+
+gov_count_con[is.na(gov_count_con)] <- 0
+
+gov_count_con <- gov_count_con %>% 
+  pivot_longer(cols = c(2:67),
+               names_to = "Localgovernmentarea",
+               values_to = "count")
+
+gov_count_con %>% 
+  filter(Localgovernmentarea %in% c("Wyndham","Brimbank","Hume", "Whittlesea", "Melton")) %>% 
+  ggplot(aes(y = count,
+             x = diagnosis_date,
+             color = Localgovernmentarea))+
+  geom_line()+
+  facet_wrap(~Localgovernmentarea, ncol = 5)+
+  labs(title = "Daily cases by Local governmnet areas",
+       x = "Date",
+       y = "Number of cases")+
+  theme_bw()
+```
 
 
