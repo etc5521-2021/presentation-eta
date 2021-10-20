@@ -22,6 +22,8 @@ library(tidyverse)
 library(lubridate)
 library(sf)
 library(ggplot2)
+library(cartogram)
+library(leaflet)
 ```
 
 ```{r data}
@@ -35,7 +37,6 @@ vic_cases <- vic_cases %>%
 
 vic_cases_source <- vic_cases_source %>%
   filter(diagnosis_date >= "2020-05-01" & diagnosis_date <= "2020-09-30")
-
 
 
 vic_cases_aggregate <- vic_cases %>%
@@ -55,7 +56,6 @@ vic_cases_source_aggregate <- vic_cases_source %>%
   group_by(diagnosis_date,Localgovernmentarea,Postcode, acquired) %>%
   tally()
   
-
 ```
 
 *Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
@@ -64,24 +64,60 @@ vic_cases_source_aggregate <- vic_cases_source %>%
 
 vic_map <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/AD_LGA_AREA_POLYGON.shp")
 
-vic_map_clean <- vic_map %>%
-  select(NAME, STATE, geometry) %>%
-  mutate(NAME = tolower(NAME))
 
 vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/POSTCODE_POLYGON.shp")
 
-vic_map_postcode_clean <- vic_map_postcode %>%
-  select(POSTCODE, geometry)
+```
 
-p <- merge(vic_cases_aggregate, vic_map_clean)
 
+```{r map}
+
+vic_map_postcode <- vic_map_postcode %>% 
+  mutate(Postcode = as.numeric(POSTCODE))
+
+cases <- vic_cases_source %>% 
+  group_by(Postcode) %>% 
+  tally() 
+
+vic_map_postcode <- left_join(vic_map_postcode, cases)
 
 ```
 
-```{r mapDisplay, eval=FALSE}
-ggplot(p) +
-   geom_sf(aes(fill = n, geometry = geometry)) +
-  theme(legend.position = "none")
 
+
+
+
+```{r}
+# This is the leaflet plot
+pal_fun <- colorQuantile("viridis", vic_map_postcode$n, n = 6, na.color = "white", reverse = TRUE)
+
+p_popup <- paste0("<strong>LGA</strong> : ", vic_map$OFFICIALNM,
+                  "</br><strong>Postcode</strong> : ", vic_map_postcode$POSTCODE,
+                  "</br><strong>Cases</strong> : ", vic_map_postcode$n)
+                  
+
+leaflet(vic_map_postcode) %>% 
+  addTiles()  %>%
+  addPolygons(
+    color = 'grey',
+    weight = 2,
+    fillColor = ~pal_fun(n),
+    fillOpacity= 0.7,
+    smoothFactor = 0.5,
+    stroke = FALSE,
+    group = "postcode") %>%
+  addPolygons(
+    data=vic_map,
+    weight = 1,
+    fillOpacity = 0,
+    color = "grey",
+    group = "LGA",
+    popup = p_popup)
 ```
+
+
+
+
+
+
 
