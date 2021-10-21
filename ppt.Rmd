@@ -101,14 +101,14 @@ leaflet(vic_map_postcode) %>%
     fillOpacity= 0.7,
     smoothFactor = 0.5,
     stroke = FALSE,
-    group = "postcode",
-    popup = p_popup) %>%
+    group = "postcode") %>%
   addPolygons(
     data=vic_map,
     weight = 1,
     fillOpacity = 0,
     color = "grey",
-    group = "LGA") %>%
+    group = "LGA",
+    popup = p_popup) %>%
   addTiles()
 ```
 
@@ -136,6 +136,7 @@ pop <- pop %>%
   mutate(NAME = toupper(NAME))
 
 vic_map <- vic_map %>%
+  rename("Number of cases" = "n") %>%  
   left_join(pop)
 
 ```
@@ -149,7 +150,7 @@ vic_3857_data_cartog_cont <-
 
 carto <- ggplot(vic_3857_data_cartog_cont) +
   scale_fill_viridis() +
-  geom_sf(aes(fill = n)) +
+  geom_sf(aes(fill = `Number of cases`)) +
   geom_sf_text(aes(label = NAME), size = 1.5, color = "black") +
   theme_void()
 
