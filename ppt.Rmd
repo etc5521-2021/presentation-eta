@@ -90,9 +90,7 @@ vic_map_postcode <- left_join(vic_map_postcode, cases)
 # This is the leaflet plot
 pal_fun <- colorQuantile("viridis", vic_map_postcode$n, n = 6, na.color = "white", reverse = TRUE)
 
-p_popup <- paste0("<strong>LGA</strong> : ", vic_map$OFFICIALNM,
-                  "</br><strong>Postcode</strong> : ", vic_map_postcode$POSTCODE,
-                  "</br><strong>Cases</strong> : ", vic_map_postcode$n)
+p_popup <- paste0("<strong>LGA</strong> : ", vic_map$OFFICIALNM)
                   
 
 leaflet(vic_map_postcode) %>%
