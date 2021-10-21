@@ -24,6 +24,9 @@ library(sf)
 library(ggplot2)
 library(cartogram)
 library(leaflet)
+library(readxl)
+library(plotly)
+library(viridis)
 ```
 
 ```{r data}
@@ -44,17 +47,13 @@ vic_cases_aggregate <- vic_cases %>%
                                                split=' ',
                                                fixed=TRUE),
                                       function(x) (x[1]))) %>%
-  group_by(diagnosis_date,Localgovernmentarea) %>%
+  group_by(Localgovernmentarea) %>%
   tally() %>%
-  mutate(NAME = tolower(Localgovernmentarea))
+  mutate(NAME = toupper(Localgovernmentarea))
 
-vic_cases_source_aggregate <- vic_cases_source %>%
-  mutate(Localgovernmentarea = sapply(strsplit(vic_cases$Localgovernmentarea,
-                                               split=' ',
-                                               fixed=TRUE),
-                                      function(x) (x[1]))) %>%
-  group_by(diagnosis_date,Localgovernmentarea,Postcode, acquired) %>%
-  tally()
+
+
+
   
 ```
 
@@ -70,7 +69,7 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 ```
 
 
-```{r map}
+```{r}
 
 vic_map_postcode <- vic_map_postcode %>% 
   mutate(Postcode = as.numeric(POSTCODE))
@@ -96,8 +95,7 @@ p_popup <- paste0("<strong>LGA</strong> : ", vic_map$OFFICIALNM,
                   "</br><strong>Cases</strong> : ", vic_map_postcode$n)
                   
 
-leaflet(vic_map_postcode) %>% 
-  addTiles()  %>%
+leaflet(vic_map_postcode) %>%
   addPolygons(
     color = 'grey',
     weight = 2,
@@ -105,15 +103,64 @@ leaflet(vic_map_postcode) %>%
     fillOpacity= 0.7,
     smoothFactor = 0.5,
     stroke = FALSE,
-    group = "postcode") %>%
+    group = "postcode",
+    popup = p_popup) %>%
   addPolygons(
     data=vic_map,
     weight = 1,
     fillOpacity = 0,
     color = "grey",
-    group = "LGA",
-    popup = p_popup)
+    group = "LGA") %>%
+  addTiles()
 ```
+
+
+```{r}
+
+vic_map <- vic_map %>%
+  left_join(vic_cases_aggregate)
+
+pop <- read_excel(path = "data/32180ds0002_2017-18.xls",
+                  sheet = "Table 2",
+                  skip = 7)
+
+pop <- pop %>%
+  select(`Local Government Area`, no....4) %>%
+  na.omit()
+
+pop <- pop %>%
+  mutate(NAME = sapply(strsplit(pop$`Local Government Area`,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1])),
+         pop = no....4) %>%
+  select(NAME, pop) %>%
+  mutate(NAME = toupper(NAME))
+
+vic_map <- vic_map %>%
+  left_join(pop)
+
+```
+
+```{r}
+vic_3857 <- st_transform(vic_map, 3857)
+
+vic_3857_data_cartog_cont <- 
+  cartogram_cont(vic_3857,
+                 weight = "pop")
+
+carto <- ggplot(vic_3857_data_cartog_cont) +
+  geom_sf_text(aes(label = NAME), size = 1.5, color = "black") +
+  scale_fill_viridis() +
+  geom_sf(aes(fill = n)) +
+  theme_void()
+
+
+carto 
+
+
+```
+
 
 
 
