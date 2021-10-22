@@ -1,8 +1,7 @@
 ---
-title: "Presentation Ninja"
-subtitle: "⚔<br/>with xaringan"
-author: "Yihui Xie"
-institute: "RStudio, PBC"
+title: "Presentation 5523"
+subtitle: ""
+author: "Shaine, Smriti, Sitha"
 date: " `r Sys.Date()` "
 output:
   xaringan::moon_reader:
@@ -57,8 +56,6 @@ vic_cases_aggregate <- vic_cases %>%
   
 ```
 
-*Note to teammates: There is a local government area termed unknown for cases. Can be used for EDA*
-
 ```{r map, results='hide'}
 
 vic_map <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/AD_LGA_AREA_POLYGON.shp")
@@ -67,7 +64,6 @@ vic_map <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_datase
 vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_of_dataset/victoria/VMADMIN/POSTCODE_POLYGON.shp")
 
 ```
-
 
 ```{r}
 
@@ -80,20 +76,13 @@ cases <- vic_cases_source %>%
 
 vic_map_postcode <- left_join(vic_map_postcode, cases)
 
-```
-
-
-
-
-
-```{r}
 # This is the leaflet plot
 pal_fun <- colorQuantile("viridis", vic_map_postcode$n, n = 6, na.color = "white", reverse = TRUE)
 
 p_popup <- paste0("<strong>LGA</strong> : ", vic_map$OFFICIALNM)
                   
 
-leaflet(vic_map_postcode) %>%
+leaflet <- leaflet(vic_map_postcode) %>%
   addPolygons(
     color = 'grey',
     weight = 2,
@@ -110,13 +99,26 @@ leaflet(vic_map_postcode) %>%
     group = "LGA",
     popup = p_popup) %>%
   addTiles()
+
+f <- paste0("leaflet.html")
+  htmlwidgets::saveWidget(leaflet, f)
+  htmltools::tags$iframe(
+    src=f,
+    width="100%", 
+    height="100%",
+    scrolling="no", 
+    seamless="seamless", 
+    frameBorder="0"
+  )
 ```
 
+---
 
 ```{r}
 
 vic_map <- vic_map %>%
-  left_join(vic_cases_aggregate)
+  left_join(vic_cases_aggregate) %>%
+  filter(NAME !=  "UNINCORPORATED")
 
 pop <- read_excel(path = "data/32180ds0002_2017-18.xls",
                   sheet = "Table 2",
@@ -137,12 +139,10 @@ pop <- pop %>%
 
 vic_map <- vic_map %>%
   rename("Number of cases" = "n") %>%  
-  left_join(pop)
+  left_join(pop) 
 
-```
-
-```{r}
 vic_3857 <- st_transform(vic_map, 3857)
+  
 
 vic_3857_data_cartog_cont <- 
   cartogram_cont(vic_3857,
@@ -155,9 +155,9 @@ carto <- ggplot(vic_3857_data_cartog_cont) +
   theme_void()
 
 
-carto 
+ggsave('carto.png', carto, dpi = 600)
 
-
+knitr::include_graphics("carto.png")
 ```
 
 
