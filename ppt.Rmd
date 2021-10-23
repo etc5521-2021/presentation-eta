@@ -134,7 +134,7 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 .panelset[
 .panel[.panel-name[Leaflet]
 
-```{r, out.height= "400px", eval = FALSE}
+```{r, out.height= "400px"}
 
 vic_map_postcode <- vic_map_postcode %>% 
   mutate(Postcode = as.numeric(POSTCODE))
