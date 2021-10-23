@@ -260,7 +260,7 @@ pop_cases <- pop %>%
 ggplot(data = pop_cases, aes(y = reorder(NAME, pop))) +
   geom_bar(aes(x = n), stat="identity", position="identity", alpha=.8, fill='pink',
            color='red') +
-  theme_minimal()
+  theme_minimal() + ylab("Local Government Areas") + xlab("Number of cases")
 
 ```
 ]
