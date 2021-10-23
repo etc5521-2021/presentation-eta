@@ -29,6 +29,10 @@ library(viridis)
 library(xaringanExtra)
 ```
 
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
 ```{r data}
 vic_cases <- read_csv("data/NCOV_COVID_Cases_by_LGA_20211016.csv")
 vic_cases_source <- read_csv("data/NCOV_COVID_Cases_by_LGA_Source_20211015.csv")
@@ -66,6 +70,8 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 
 ```
 
+.panelset[
+.panel[.panel-name[Leaflet]
 ```{r}
 
 vic_map_postcode <- vic_map_postcode %>% 
@@ -112,11 +118,15 @@ htmltools::tags$iframe(
     frameBorder="0"
   )
 ```
+]
+
+.panel[.panel-name[check]
+Let's just try
+]
+
 
 ---
-```{r xaringan-panelset, echo=FALSE}
-xaringanExtra::use_panelset()
-```
+
 .panelset[
 .panel[.panel-name[Cartogram Map]
 ```{r echo=FALSE, out.height=600, out.width= 600}
