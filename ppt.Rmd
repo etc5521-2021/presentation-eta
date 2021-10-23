@@ -27,6 +27,11 @@ library(leaflet)
 library(readxl)
 library(plotly)
 library(viridis)
+library(xaringanExtra)
+```
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
 ```
 
 
@@ -119,6 +124,8 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 
 ```
 
+.panelset[
+.panel[.panel-name[Leaflet]
 ```{r}
 
 vic_map_postcode <- vic_map_postcode %>% 
@@ -169,8 +176,8 @@ leaflet <- leaflet(vic_map_postcode) %>%
 
 
 f <- paste0("leaflet.html")
-  htmlwidgets::saveWidget(leaflet, f)
-  htmltools::tags$iframe(
+htmlwidgets::saveWidget(leaflet, f)
+htmltools::tags$iframe(
     src=f,
     width="100%", 
     height="100%",
@@ -180,15 +187,25 @@ f <- paste0("leaflet.html")
   )
   
 ```
+]
+
+.panel[.panel-name[check]
+Let's just try
+]
+
 
 
 ---
 
-```{r}
+.panelset[
+.panel[.panel-name[Cartogram Map]
+```{r echo=FALSE, out.height=600, out.width= 600}
+knitr::include_graphics("carto.png")
+```
+]
 
-vic_map <- vic_map %>%
-  left_join(vic_cases_aggregate) %>%
-  filter(NAME !=  "UNINCORPORATED")
+.panel[.panel-name[Bar Plot]
+```{r}
 
 pop <- read_excel(path = "data/32180ds0002_2017-18.xls",
                   sheet = "Table 2",
@@ -200,35 +217,29 @@ pop <- pop %>%
 
 pop <- pop %>%
   mutate(NAME = sapply(strsplit(pop$`Local Government Area`,
-                                               split=' ',
-                                               fixed=TRUE),
-                                      function(x) (x[1])),
+                                split=' ',
+                                fixed=TRUE),
+                       function(x) (x[1])),
          pop = no....4) %>%
   select(NAME, pop) %>%
   mutate(NAME = toupper(NAME))
 
-vic_map <- vic_map %>%
-  rename("Number of cases" = "n") %>%  
-  left_join(pop) 
-
-vic_3857 <- st_transform(vic_map, 3857)
+pop_cases <- pop %>%
+  left_join(vic_cases_aggregate) %>%
+  na.omit() %>%
+  arrange(desc(pop)) %>%
+  head(20)
   
 
-vic_3857_data_cartog_cont <- 
-  cartogram_cont(vic_3857,
-                 weight = "pop")
+ggplot(data = pop_cases, aes(y = reorder(NAME, pop))) +
+  geom_bar(aes(x = n), stat="identity", position="identity", alpha=.8, fill='pink',
+           color='red') +
+  theme_minimal()
 
-carto <- ggplot(vic_3857_data_cartog_cont) +
-  scale_fill_viridis() +
-  geom_sf(aes(fill = `Number of cases`)) +
-  geom_sf_text(aes(label = NAME), size = 1.5, color = "black") +
-  theme_void()
-
-
-ggsave('carto.png', carto, dpi = 600)
-
-knitr::include_graphics("carto.png")
 ```
+]
+]
+
 
 
 
