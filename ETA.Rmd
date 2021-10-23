@@ -12,10 +12,6 @@ library(readr)
 library(tidyverse)
 library(ggplot2)
 library(lubridate)
-library(kableExtra)
-library(DT)
-library(dygraphs)
-library(xts)
 library(plotly)
 library(quantmod)
 
@@ -28,7 +24,7 @@ lga <- read_csv("data/lga.csv")
 
 ```{r}
 lga_clean <- lga %>%
-  mutate(Localgovernmentarea = sapply(strsplit(lga_clean$Localgovernmentarea,
+  mutate(Localgovernmentarea = sapply(strsplit(lga$Localgovernmentarea,
                                                split=' ',
                                                fixed=TRUE),
                                       function(x) (x[1]))) %>% 
@@ -65,9 +61,6 @@ lga_2020 <- lga_clean %>%
                     "Sep")) 
 ```
 
-
-
-Wyndham, Brimbank, HUme, Melton, Whittlesea, Melbourne
 
 
 ```{r}
@@ -119,19 +112,6 @@ lgagraph_travel <- lga_2020 %>%
                                     "Interstate")) %>%
   arrange(desc(count))
 
-  # pivot_wider(id_cols = NULL, names_from = Localgovernmentarea, values_from = count)  
-  
-# 
-# lgagraph_travel$date<-as.POSIXct(paste(lgagraph_travel$diagnosis_date, lgagraph_travel$diagnosis_date), format="%Y-%m-%d %H")
-# lgagraph_travel[is.na(lgagraph_travel)] <- 0
-# lgagraph_travel %>%
-#   select(date, Interstate, Moonee, Hume, Melton, Casey)%>%
-#   xts(order.by=as.POSIXct(lgagraph_travel$date))%>%
-#   dygraph( main = "Travel Overseas",
-#          xlab = "Date") %>%
-#   dyOptions(drawGrid = T, digitsAfterDecimal=5)%>%
-#    dyRangeSelector()%>%
-#    dyLegend(show = "follow")
 
 p1 <- ggplot(lgagraph_travel, aes(diagnosis_date, count, color = Localgovernmentarea, group = 1))+
      geom_line() +
@@ -148,10 +128,6 @@ layout(
 
 ```
 
-
-
-
-Interstate, Casey, Melton
 
 
 ```{r}
@@ -183,9 +159,5 @@ layout(
 
 
 
-
-Melbourne, Brimbank, Wyndham, Melton, Hume, Whittlesea. 
-
-So Melbourne is not very high on travel cases because it was completely closed to international students, tourists and any outsiders, making the only way for the infection spreading through locals. Which is why it is there in plots 1 and 3. 
 
 
