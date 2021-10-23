@@ -27,6 +27,7 @@ library(leaflet)
 library(readxl)
 library(plotly)
 library(viridis)
+library(xaringanExtra)
 ```
 
 
@@ -119,7 +120,7 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 
 vic_map_postcode <- vic_map_postcode %>% 
   mutate(Postcode = as.numeric(POSTCODE))
@@ -184,7 +185,7 @@ f <- paste0("leaflet.html")
 
 ---
 
-```{r}
+```{r, eval=FALSE}
 
 vic_map <- vic_map %>%
   left_join(vic_cases_aggregate) %>%
@@ -231,9 +232,164 @@ knitr::include_graphics("carto.png")
 ```
 
 
+--- 
+
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+
+```{r}
+lga <- read_csv("data/lga.csv")
+
+```
+
+```{r}
+lga_clean <- lga %>%
+  mutate(Localgovernmentarea = sapply(strsplit(lga$Localgovernmentarea,
+                                               split=' ',
+                                               fixed=TRUE),
+                                      function(x) (x[1]))) %>% 
+  select(diagnosis_date, Localgovernmentarea, acquired) %>% 
+  mutate(count = 1) %>% 
+  group_by(diagnosis_date, Localgovernmentarea, acquired) %>% 
+  tally() %>% 
+  pivot_wider(names_from = "Localgovernmentarea",
+              values_from = n) 
+
+lga_clean[is.na(lga_clean)] <- 0
+
+lga_clean <- lga_clean %>% 
+  pivot_longer(cols = c(3:79),
+               names_to = "Localgovernmentarea",
+               values_to = "count")
+
+```
 
 
 
+```{r}
+
+lga_2020 <- lga_clean %>% 
+  mutate(month = month(diagnosis_date, label = TRUE)) %>% 
+  mutate(year = year(diagnosis_date)) %>% 
+  mutate(diagnosis_date = as.Date(diagnosis_date))%>% 
+  group_by(acquired) %>% 
+  filter(year == "2020") %>% 
+  filter(month == c("May",
+                    "Jun",
+                     "Jul",
+                    "Aug",
+                    "Sep")) 
+```
+
+---
+class: center
+
+# How did the Virus Spread across Victoria?
+
+--
+
+There are 3 major reasons 
+
+---
+
+.panelset[
+.panel[.panel-name[Direct contact]
+
+```{r panel-chunk, out.width= "100%"}
+
+lgagraph <- lga_2020 %>%
+  select(diagnosis_date, Localgovernmentarea, acquired, count, month) %>%
+  group_by(diagnosis_date,month, Localgovernmentarea, acquired) %>%
+  summarise(count = sum(count)) %>%
+  arrange(desc(count)) %>%
+  filter(Localgovernmentarea %in% c("Wyndham",
+                                    "Brimbank",
+                                    "Hume",
+                                    "Melton",
+                                    "Whittlesea")) 
+
+
+
+p <- ggplot(lgagraph, aes(diagnosis_date, count, color = Localgovernmentarea, group = 1))+
+     geom_line() +
+  ggtitle("Contact with a confirmed cases")+
+  xlab("date")+
+  ylab("No.of cases")
+ggplotly(p) %>% 
+layout(
+  xaxis = list (rangeslider =
+                  list(type = "date"))
+)  
+
+
+```
+]
+
+
+.panel[.panel-name[Travel Overseas]
+
+```{r, out.width= "100%"}
+lgagraph_travel <- lga_2020 %>%
+  select(diagnosis_date, Localgovernmentarea, acquired, count) %>%
+  group_by(diagnosis_date, Localgovernmentarea, acquired) %>%
+   filter(acquired == "Travel overseas") %>% 
+  filter(Localgovernmentarea %in% c(
+                                    "Casey",
+                                    "Hume",
+                                    "Melton",
+                                    "Moonee",
+                                    "Interstate")) %>%
+  arrange(desc(count))
+
+
+p1 <- ggplot(lgagraph_travel, aes(diagnosis_date, count, color = Localgovernmentarea, group = 1))+
+     geom_line() +
+  ggtitle("Travel Overseas")+
+  xlab("date")+
+  ylab("No.of cases")
+ggplotly(p1) %>% 
+layout(
+  xaxis = list (rangeslider =
+                  list(type = "date"))
+)  
+
+
+```
+
+]
+
+.panel[.panel-name[Unknown Source]
+
+```{r, out.width= "100%"}
+lga45 <- lga_2020 %>%
+  select(diagnosis_date, Localgovernmentarea, acquired, count) %>%
+  group_by(diagnosis_date, Localgovernmentarea, acquired) %>%
+   filter(acquired == "Acquired in Australia, unknown source") %>% 
+  filter(Localgovernmentarea %in% c(
+                                    "Melbourne",
+                                    "Brimbank",
+                                    "Wyndham",
+                                    "Hume",
+                                    "Melton")) %>%
+  arrange(desc(count)) 
+
+
+p2 <- ggplot(lga45, aes(diagnosis_date, count, color = Localgovernmentarea, group = 1))+
+     geom_line() +
+  ggtitle("Unknown source in OZ")+
+  xlab("date")+
+  ylab("No.of cases")
+ggplotly(p2) %>% 
+layout(
+  xaxis = list (rangeslider =
+                  list(type = "date"))
+)   
+
+```
+
+
+]]
 
 
 
