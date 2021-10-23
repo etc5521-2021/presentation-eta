@@ -101,8 +101,8 @@ leaflet <- leaflet(vic_map_postcode) %>%
   addTiles()
 
 f <- paste0("leaflet.html")
-  htmlwidgets::saveWidget(leaflet, f)
-  htmltools::tags$iframe(
+htmlwidgets::saveWidget(leaflet, f)
+htmltools::tags$iframe(
     src=f,
     width="100%", 
     height="100%",
@@ -116,10 +116,6 @@ f <- paste0("leaflet.html")
 
 ```{r}
 
-vic_map <- vic_map %>%
-  left_join(vic_cases_aggregate) %>%
-  filter(NAME !=  "UNINCORPORATED")
-
 pop <- read_excel(path = "data/32180ds0002_2017-18.xls",
                   sheet = "Table 2",
                   skip = 7)
@@ -130,32 +126,12 @@ pop <- pop %>%
 
 pop <- pop %>%
   mutate(NAME = sapply(strsplit(pop$`Local Government Area`,
-                                               split=' ',
-                                               fixed=TRUE),
-                                      function(x) (x[1])),
+                                split=' ',
+                                fixed=TRUE),
+                       function(x) (x[1])),
          pop = no....4) %>%
   select(NAME, pop) %>%
   mutate(NAME = toupper(NAME))
-
-vic_map <- vic_map %>%
-  rename("Number of cases" = "n") %>%  
-  left_join(pop) 
-
-vic_3857 <- st_transform(vic_map, 3857)
-  
-
-vic_3857_data_cartog_cont <- 
-  cartogram_cont(vic_3857,
-                 weight = "pop")
-
-carto <- ggplot(vic_3857_data_cartog_cont) +
-  scale_fill_viridis() +
-  geom_sf(aes(fill = `Number of cases`)) +
-  geom_sf_text(aes(label = NAME), size = 1.5, color = "black") +
-  theme_void()
-
-
-ggsave('carto.png', carto, dpi = 600)
 
 knitr::include_graphics("carto.png")
 ```
