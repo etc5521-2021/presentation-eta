@@ -216,6 +216,12 @@ htmltools::tags$iframe(
 ]
 ---
 
+#   How is the population density affecting spread of virus?
+
+
+
+---
+
 .panelset[
 .panel[.panel-name[Cartogram Map]
 ```{r, echo=FALSE, out.height="110%"}
@@ -262,6 +268,11 @@ ggplot(data = pop_cases, aes(y = reorder(NAME, pop))) +
 .panel[.panel-name[Analysis]
 # Analysis
 
+-   Casey has the highest population, however the cases don't keep up. Possible Causes: Spaced out residential area, non essential activity down by 27%
+-   Wyndham/Brimbank - culturally diverse blue-collar local government area. Very large families, lower socio-economic conditions, people who actually work in the factories, who do logistics, who deal with warehousing, who run small businesses and keep things running
+-   Warnings were not taken seriously until it was too late
+-   Multicultural communities in Hume, many new arrivals, and English proficiency is below the city average
+-   Boroondora and Whitehorse have more affluent communities and that reflects in their numbers.
 ]
 ]
 
