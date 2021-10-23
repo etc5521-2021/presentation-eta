@@ -30,7 +30,7 @@ library(viridis)
 ```
 
 
-class: center, bottom, inverse
+class: center, bottom
 
 background-size: 100%
 
@@ -85,7 +85,12 @@ background-position: top
 <br>
 Image credit: [IMF](https://www.tuvsud.com/zh-tw/covid-19-precautionary-measures)
 ---
+```{r xaringanExtra, echo=FALSE}
+xaringanExtra::use_panelset()
+```
 
+.panelset[
+.panel[.panel-name[Map]
 ```{r data}
 vic_cases <- read_csv("data/NCOV_COVID_Cases_by_LGA_20211016.csv")
 vic_cases_source <- read_csv("data/NCOV_COVID_Cases_by_LGA_Source_20211015.csv")
@@ -119,7 +124,7 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 
 ```
 
-```{r}
+```{r eval = FALSE}
 
 vic_map_postcode <- vic_map_postcode %>% 
   mutate(Postcode = as.numeric(POSTCODE))
@@ -180,11 +185,29 @@ f <- paste0("leaflet.html")
   )
   
 ```
+]
 
+.panel[.panel-name[Analysis]
+# Analysis
+- The **boarder refers to the local government areas**   
 
+- The **colors filled by the postcode**   
+
+- **Local Government Area** names are abbreviated in the Local Government Area structure   
+
+- **Postcodes** (POAs = Postal Areas)   
+
+- Darker colors refer to higher number of cases confirmed, lighter refers to lower
+
+- Some lighter colors are found surrounded by darker colors and those areas with lighter colors are not residential areas, examples are:   
+1.Postcode: 3045, LGA: Hume is Melbourne International Airport   
+2.Postcode: 3062, LGA: Hume is Somerton Power Station   
+**For further details, please refer to the the Map**
+]
+]
 ---
 
-```{r}
+```{r eval = FALSE}
 
 vic_map <- vic_map %>%
   left_join(vic_cases_aggregate) %>%
