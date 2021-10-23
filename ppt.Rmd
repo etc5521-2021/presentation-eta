@@ -134,7 +134,7 @@ vic_map_postcode <- st_read(dsn = "data/Order_T8YRCY/ll_gda2020/esrishape/whole_
 .panelset[
 .panel[.panel-name[Leaflet]
 
-```{r, out.height= "400px"}
+```{r, out.height= "400px", eval = FALSE}
 
 vic_map_postcode <- vic_map_postcode %>% 
   mutate(Postcode = as.numeric(POSTCODE))
@@ -218,9 +218,7 @@ htmltools::tags$iframe(
 
 .panelset[
 .panel[.panel-name[Cartogram Map]
-
-
-```{r echo=FALSE, out.height=600, out.width= 600}
+```{r, echo=FALSE, out.height="110%"}
 knitr::include_graphics("carto.png")
 ```
 ]
@@ -259,6 +257,11 @@ ggplot(data = pop_cases, aes(y = reorder(NAME, pop))) +
   theme_minimal()
 
 ```
+]
+
+.panel[.panel-name[Analysis]
+# Analysis
+
 ]
 ]
 
@@ -355,6 +358,38 @@ layout(
 ```
 ]
 
+.panel[.panel-name[Unknown Source]
+
+```{r, out.width= "100%"}
+lga45 <- lga_2020 %>%
+  select(diagnosis_date, Localgovernmentarea, acquired, count) %>%
+  group_by(diagnosis_date, Localgovernmentarea, acquired) %>%
+   filter(acquired == "Acquired in Australia, unknown source") %>% 
+  filter(Localgovernmentarea %in% c(
+                                    "Melbourne",
+                                    "Brimbank",
+                                    "Wyndham",
+                                    "Hume",
+                                    "Melton")) %>%
+  arrange(desc(count)) 
+
+
+p2 <- ggplot(lga45, aes(diagnosis_date, count, color = Localgovernmentarea, group = 1))+
+     geom_line() +
+  ggtitle("Unknown source in OZ")+
+  xlab("date")+
+  ylab("No.of cases")
+ggplotly(p2) %>% 
+layout(
+  xaxis = list (rangeslider =
+                  list(type = "date"))
+)   
+
+```
+
+
+]
+
 
 .panel[.panel-name[Travel Overseas]
 
@@ -388,37 +423,7 @@ layout(
 
 ]
 
-.panel[.panel-name[Unknown Source]
-
-```{r, out.width= "100%"}
-lga45 <- lga_2020 %>%
-  select(diagnosis_date, Localgovernmentarea, acquired, count) %>%
-  group_by(diagnosis_date, Localgovernmentarea, acquired) %>%
-   filter(acquired == "Acquired in Australia, unknown source") %>% 
-  filter(Localgovernmentarea %in% c(
-                                    "Melbourne",
-                                    "Brimbank",
-                                    "Wyndham",
-                                    "Hume",
-                                    "Melton")) %>%
-  arrange(desc(count)) 
-
-
-p2 <- ggplot(lga45, aes(diagnosis_date, count, color = Localgovernmentarea, group = 1))+
-     geom_line() +
-  ggtitle("Unknown source in OZ")+
-  xlab("date")+
-  ylab("No.of cases")
-ggplotly(p2) %>% 
-layout(
-  xaxis = list (rangeslider =
-                  list(type = "date"))
-)   
-
-```
-
-
-]]
+]
 
 
 
