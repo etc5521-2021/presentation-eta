@@ -6,6 +6,7 @@ date: " `r Sys.Date()` "
 output:
   xaringan::moon_reader:
     lib_dir: libs
+    seal: false
     nature:
       highlightStyle: github
       highlightLines: true
@@ -27,6 +28,63 @@ library(readxl)
 library(plotly)
 library(viridis)
 ```
+
+
+class: center, bottom, inverse
+
+background-size: 100%
+
+background-image: url("image/cover.jpg")
+
+background-position: top
+
+# COVID-19 in Victoria
+
+## Shaine, Smriti, Sitha
+
+## Monash University
+
+### `r Sys.Date()`
+
+<br>
+Image credit: [Taiwan Centers for Disease Control](https://www.cdc.gov.tw/En)
+---
+
+class: bottom
+
+background-size: 100%
+
+background-image: url("image/topic.jpg")
+
+background-position: top
+
+# How are the COVID-19 cases spreading in the Victorian community during 1st May to 30th September in 2020?
+
+<br>
+Image credit: [PAHO](https://www.paho.org/en/news/26-1-2021-who-calls-experts-covid-19-technical-advisory-group)
+---
+class: bottom
+
+background-size: 100%
+
+background-image: url("image/intro.jpg")
+
+background-position: top
+
+# What is Covid-19
+- An infectious disease caused by coronavirus 
+- brought a pandemic to the world since late 2019. 
+- Up to October 2021, more than 240 millions confirmed cases and 5 millions deaths have been reported   
+
+**On average, it takes 5–6 for symptoms to show, including:**   
+- tiredness
+- dry cough
+- headache
+- fever
+
+<br>
+Image credit: [IMF](https://www.tuvsud.com/zh-tw/covid-19-precautionary-measures)
+---
 
 ```{r data}
 vic_cases <- read_csv("data/NCOV_COVID_Cases_by_LGA_20211016.csv")
@@ -50,10 +108,6 @@ vic_cases_aggregate <- vic_cases %>%
   tally() %>%
   mutate(NAME = toupper(Localgovernmentarea))
 
-
-
-
-  
 ```
 
 ```{r map, results='hide'}
@@ -80,6 +134,11 @@ vic_map_postcode <- left_join(vic_map_postcode, cases)
 pal_fun <- colorQuantile("viridis", vic_map_postcode$n, n = 6, na.color = "white", reverse = TRUE)
 
 p_popup <- paste0("<strong>LGA</strong> : ", vic_map$OFFICIALNM)
+
+markers <- data.frame(postcode = c("3045", "3062", "3002", "3427", "3027"),
+                      description = c("Postcode: 3045, Melbourne International Airport", "Postcode: 3062, Somerton Power Station", "Postcode: 3002, Melbourne Cricket Ground & Fitzroy Garden", "Postcode: 3427, Diggers Rest", "Postcode: 3027, RAAF Base Williams"),
+                      longitude = c(144.8447, 144.9539, 144.97931, 144.721111, 144.7437),
+                      latitude = c(-37.6638, -37.6338, -37.815083, -37.628056, -37.9316))
                   
 
 leaflet <- leaflet(vic_map_postcode) %>%
@@ -93,12 +152,21 @@ leaflet <- leaflet(vic_map_postcode) %>%
     group = "postcode") %>%
   addPolygons(
     data=vic_map,
-    weight = 1,
+    weight = 2,
     fillOpacity = 0,
     color = "grey",
     group = "LGA",
     popup = p_popup) %>%
-  addTiles()
+  addTiles() %>% 
+  setView(lng = 144.964600, lat = -37.020100, zoom = 7) %>% 
+     addMarkers(
+        lng = ~longitude,
+        lat = ~latitude,
+        popup = ~description,
+        layerId = ~postcode,
+        data = markers
+      ) 
+
 
 f <- paste0("leaflet.html")
   htmlwidgets::saveWidget(leaflet, f)
@@ -110,7 +178,9 @@ f <- paste0("leaflet.html")
     seamless="seamless", 
     frameBorder="0"
   )
+  
 ```
+
 
 ---
 
