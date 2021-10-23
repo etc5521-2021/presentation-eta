@@ -61,7 +61,7 @@ vic_3857_data_cartog_cont <-
                  weight = "pop")
 
 carto <- ggplot(vic_3857_data_cartog_cont) +
-  scale_fill_viridis() +
+  scale_fill_viridis(direction = -1) +
   geom_sf(aes(fill = `Number of cases`)) +
   geom_sf_text(aes(label = NAME), size = 1.5, color = "black") +
   theme_void()

@@ -26,6 +26,7 @@ library(leaflet)
 library(readxl)
 library(plotly)
 library(viridis)
+library(xaringanExtra)
 ```
 
 ```{r data}
@@ -113,7 +114,17 @@ htmltools::tags$iframe(
 ```
 
 ---
+```{r xaringan-panelset, echo=FALSE}
+xaringanExtra::use_panelset()
+```
+.panelset[
+.panel[.panel-name[Cartogram Map]
+```{r echo=FALSE, out.height=600, out.width= 600}
+knitr::include_graphics("carto.png")
+```
+]
 
+.panel[.panel-name[Bar Plot]
 ```{r}
 
 pop <- read_excel(path = "data/32180ds0002_2017-18.xls",
@@ -133,8 +144,22 @@ pop <- pop %>%
   select(NAME, pop) %>%
   mutate(NAME = toupper(NAME))
 
-knitr::include_graphics("carto.png")
+pop_cases <- pop %>%
+  left_join(vic_cases_aggregate) %>%
+  na.omit() %>%
+  arrange(desc(pop)) %>%
+  head(20)
+  
+
+ggplot(data = pop_cases, aes(y = reorder(NAME, pop))) +
+  geom_bar(aes(x = n), stat="identity", position="identity", alpha=.8, fill='pink',
+           color='red') +
+  theme_minimal()
+
 ```
+]
+]
+
 
 
 
