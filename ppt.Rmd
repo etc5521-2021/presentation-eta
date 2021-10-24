@@ -1,7 +1,7 @@
 ---
 title: "Presentation 5523"
 subtitle: ""
-author: "Shaine, Smriti, Sitha"
+author: "Shaine H, Sitha J, Smriti B"
 date: " `r Sys.Date()` "
 output:
   xaringan::moon_reader:
@@ -47,7 +47,7 @@ background-position: top
 
 # COVID-19 in Victoria
 
-## Shaine, Smriti, Sitha
+## Sithalakshmi Jawahar, Smriti Bhat, Yin Shan Ho
 
 ## Monash University
 
@@ -268,11 +268,11 @@ ggplot(data = pop_cases, aes(y = reorder(NAME, pop))) +
 .panel[.panel-name[Analysis]
 # Analysis
 
--   Casey has the highest population, however the cases don't keep up. Possible Causes: Spaced out residential area, non essential activity down by 27%
--   Wyndham/Brimbank - culturally diverse blue-collar local government area. Very large families, lower socio-economic conditions, people who actually work in the factories, who do logistics, who deal with warehousing, who run small businesses and keep things running
+-   **Casey** has the highest population, however the cases don't keep up. Possible Causes: Spaced out residential area, non essential activity down by 27%
+-   **Wyndham/Brimbank** - culturally diverse blue-collar local government area. Very large families, lower socio-economic conditions, people who actually work in the factories, who do logistics, who deal with warehousing, who run small businesses and keep things running
 -   Warnings were not taken seriously until it was too late
--   Multicultural communities in Hume, many new arrivals, and English proficiency is below the city average
--   Boroondora and Whitehorse have more affluent communities and that reflects in their numbers.
+-   Multicultural communities in **Hume**, many new arrivals, and English proficiency is below the city average
+-   **Boroondora** and **Whitehorse** have more affluent communities and that reflects in their numbers.
 ]
 ]
 
